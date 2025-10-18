@@ -54,3 +54,36 @@ def test_given_verifying_an_invalid_length_bytes_key_then_ipe_raised(mock_encryp
         match="Invalid input, key must be of length 128, 192 or 256 bits",
     ):
         Encrypt().validate(params={"key": b'1111111111111111'})
+
+def test_operator_name():
+    operator = Encrypt()
+    assert operator.operator_name() == "encrypt"
+
+from presidio_anonymizer.operators import OperatorType
+
+def test_operator_type():
+    operator = Encrypt()
+    assert operator.operator_type() == OperatorType.Anonymize
+
+@mock.patch.object(AESCipher, "is_valid_key_size")
+def test_given_verifying_an_invalid_length_bytes_key_then_ipe_raised(mock_is_valid):
+    mock_is_valid.return_value = False
+
+    with pytest.raises(
+        InvalidParamError,
+        match="Invalid input, key must be of length 128, 192 or 256 bits",
+    ):
+        Encrypt().validate(params={"key": b'1111111111111111'})
+
+import pytest
+
+@pytest.mark.parametrize("key", [
+    "a" * 16,                      # 128 bits string
+    "b" * 24,                      # 192 bits string
+    "c" * 32,                      # 256 bits string
+    b"d" * 16,                     # 128 bits bytes
+    b"e" * 24,                     # 192 bits bytes
+    b"f" * 32                      # 256 bits bytes
+])
+def test_valid_keys(key):
+    Encrypt().validate(params={"key": key})
